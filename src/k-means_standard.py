@@ -16,33 +16,56 @@ advances in the era of big data
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-04-14
+2026-04-16
 """"
 
 # INPUT: 
-# in_data: Array of N-d datapoints, i.e. a list of lists. Should be normalized!
+# in_data: Array of N-d datapoints, i.e. a list of numpy arrays. Should be normalized!
 # k: Number of partitions *k*.
 #
 # OUTPUT:
-# clusters: Partition of the datapoints in `in_data`. i.e. a list of 2-d lists.
+# clusters: Partition of the datapoints in `in_data`. i.e. a 2-d list of numpy arrays.
 # centroids: Centerpoint of each partition in `clusters`.
 
 my_seed = 1234
+rng = np.random.default_rng(seed=my_seed)
 
 def k-means(k, in_data):
-    rng = np.random.default_rng(seed=my_seed)
     dimensions = in_data[0].size
     centroids = rng.random(k, dimensions)
-    partition_assignments = np.zeros(in_data.size, dtype=np.int32)
+    converged = False
 
-    for i in range(in_data.size):
-        distance = distance.cdist(in_data[i], centroids[0], 'sqeuclidean')
-        assigned_cluster_index = 0
+    while not converged: 
+        converged_centroids = 0
+        partitions = [[]*k]
         
-        for j in range(1, k):
-            new_distance = distance.cdist(in_data[i], centroids[j], 'sqeuclidean')
-            if (new_distance < distance):
-                distance = new_distance
-                assigned_cluster_index = j
+        # Step 1: Assign points to nearest centroids
+        for i in range(in_data.size):
+            # Initialize the calculation by doing the first iteration outside the loop
+            distance_to_centroid = distance.cdist(in_data[i], centroids[0], 'sqeuclidean')
+            assigned_cluster_index = 0
+            
+            for j in range(1, k):
+                new_distance_to_centroid = distance.cdist(in_data[i], centroids[j], 'sqeuclidean')
+                if (new_distance_to_centroid < distance_to_centroid):
+                    distance_to_centroid = new_distance_to_centroid
+                    assigned_cluster_index = j
+            
+            partitions[j].append(in_data[i])
+
+        # Step 2: recompute the centroids
+        for i in range(k):
+            vector_sum = np.zeros(dimensions)
+            for j in range(len(partitions[i])):
+                vector_sum += partitions[i][j]
+            
+            new_centroid = vector_sum / centroids[i].size
+            if np.linalg.norm(centroids[i], new_centroid) < 1e-8:
+                converged_centroids += 1
+
+            centroids[i] = new_centroid
+
+        if converged_centroids == k:
+            converged = True
         
-        partition_assignments[i] = j        
+        return (partitions, centroids)
