@@ -1,3 +1,7 @@
+### PROJECT SPECIFIC ###
+# .csv data tends to be to big for GitHub
+*.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

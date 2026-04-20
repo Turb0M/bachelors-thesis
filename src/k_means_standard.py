@@ -16,42 +16,48 @@ advances in the era of big data
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-04-16
-""""
+2026-04-20
+"""
 
 # INPUT: 
+# 
 # in_data: Array of N-d datapoints, i.e. a list of numpy arrays. Should be normalized!
+# Update: Using a Pandas DataFrame for this instead
+#
 # k: Number of partitions *k*.
 #
 # OUTPUT:
+# 
 # clusters: Partition of the datapoints in `in_data`. i.e. a 2-d list of numpy arrays.
 # centroids: Centerpoint of each partition in `clusters`.
 
-my_seed = 1234
-rng = np.random.default_rng(seed=my_seed)
-
-def k-means(k, in_data):
+def k_means(k, in_data, rng_seed):
+    rng = np.random.default_rng(seed=rng_seed)
     dimensions = in_data[0].size
-    centroids = rng.random(k, dimensions)
+    centroids = rng.random((k, dimensions)) - 0.5
     converged = False
 
-    while not converged: 
+    print(centroids) # debug
+
+    while not converged:
+        print("Not converged.") # testing
         converged_centroids = 0
-        partitions = [[]*k]
+        partitions = [ [] for _ in range(k) ]
         
         # Step 1: Assign points to nearest centroids
-        for i in range(in_data.size):
+        for i in range(in_data.shape[0]):
+                
             # Initialize the calculation by doing the first iteration outside the loop
-            distance_to_centroid = distance.cdist(in_data[i], centroids[0], 'sqeuclidean')
+            distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[0])
             assigned_cluster_index = 0
             
             for j in range(1, k):
-                new_distance_to_centroid = distance.cdist(in_data[i], centroids[j], 'sqeuclidean')
+                new_distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[j])
                 if (new_distance_to_centroid < distance_to_centroid):
                     distance_to_centroid = new_distance_to_centroid
                     assigned_cluster_index = j
-            
-            partitions[j].append(in_data[i])
+                
+            partitions[assigned_cluster_index].append(in_data[i])
 
         # Step 2: recompute the centroids
         for i in range(k):
@@ -59,13 +65,16 @@ def k-means(k, in_data):
             for j in range(len(partitions[i])):
                 vector_sum += partitions[i][j]
             
-            new_centroid = vector_sum / centroids[i].size
-            if np.linalg.norm(centroids[i], new_centroid) < 1e-8:
+            new_centroid = vector_sum / np.int64(len(partitions[i]))
+            # testing
+            print(distance.euclidean(centroids[i], new_centroid)) 
+            if distance.euclidean(centroids[i], new_centroid) < 1e-4:
                 converged_centroids += 1
 
             centroids[i] = new_centroid
 
         if converged_centroids == k:
             converged = True
+            print("Converged!")
         
-        return (partitions, centroids)
+    return (partitions, centroids)
