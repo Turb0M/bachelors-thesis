@@ -16,7 +16,7 @@ advances in the era of big data
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-04-20
+2026-04-27
 """
 
 # INPUT: 
@@ -26,13 +26,14 @@ eaeklof@kth.se
 #
 # k: Number of partitions *k*.
 #
+# rng_seed: self explanitory.
+#
 # OUTPUT:
 # 
 # clusters: Partition of the datapoints in `in_data`. i.e. a 2-d list of numpy arrays.
 # centroids: Centerpoint of each partition in `clusters`.
 
-def k_means(k, in_data, rng_seed):
-    rng = np.random.default_rng(seed=rng_seed)
+def k_means(k, in_data, rng):
     dimensions = in_data[0].size
     centroids = rng.random((k, dimensions)) - 0.5
     converged = False
@@ -45,7 +46,7 @@ def k_means(k, in_data, rng_seed):
         partitions = [ [] for _ in range(k) ]
         
         # Step 1: Assign points to nearest centroids
-        for i in range(in_data.shape[0]):
+        for i in range(in_data.shape[0]): # for each datapoint in the input data
                 
             # Initialize the calculation by doing the first iteration outside the loop
             distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[0])
@@ -68,7 +69,7 @@ def k_means(k, in_data, rng_seed):
             new_centroid = vector_sum / np.int64(len(partitions[i]))
             # testing
             print(distance.euclidean(centroids[i], new_centroid)) 
-            if distance.euclidean(centroids[i], new_centroid) < 1e-4:
+            if distance.euclidean(centroids[i], new_centroid) < 1e-3:
                 converged_centroids += 1
 
             centroids[i] = new_centroid
@@ -76,5 +77,6 @@ def k_means(k, in_data, rng_seed):
         if converged_centroids == k:
             converged = True
             print("Converged!")
-        
+
+    partitions = [ np.array(partition) for partition in partitions ]
     return (partitions, centroids)

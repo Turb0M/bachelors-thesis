@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
@@ -13,12 +14,11 @@ Compares the performance of different K-means algorithm implementations.
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-04-20
+2026-05-05
 """
 
 def main():
-    print("Initializing tools/variables")
-    rng_seed = 1234
+    rng = np.random.default_rng(seed=1234)
     scaler = StandardScaler()
     pca = PCA(n_components = 10)
     
@@ -29,20 +29,42 @@ def main():
     data_trimmed = raw_data.select_dtypes(include=['int64'])
     data_scaled = pd.DataFrame(scaler.fit_transform(data_trimmed))
     pca.fit(data_scaled)
-    data_reduced = pd.DataFrame(pca.transform(data_scaled))
-    data_normalized = data_reduced.copy()
+    data_preprocessed = pd.DataFrame(pca.transform(data_scaled))
     
-    for column in data_normalized:
-        data_normalized[column] = data_normalized[column] / data_normalized[column].abs().max()
+    print(data_preprocessed.head())
 
-    print(data_normalized.head())
-
-    input_data = data_normalized.to_numpy()
+    input_data = data_preprocessed.to_numpy()
 
     print("Running k-means")
-    partitions, centroids = k_means(5, input_data, rng_seed)
+    partitions, centroids = k_means(2, input_data, rng)
 
-    print(centroids)
+    # Plotting
+    colors = ['red', 'orange', 'yellow', 
+              'green', 'blue', 'purple', 
+              'pink', 'brown', 'cyan']
+
+    # Plot 1% of the first two PCA components of each partition
+    partitions_sample = [
+        rng.choice(
+            partition[:,0:2], 
+            size=partition.shape[0]//100, 
+            replace=False
+        ) 
+        for partition in partitions
+    ]
+    
+    for i in range(len(partitions_sample)):
+        plt.scatter(
+            partitions_sample[i][:,0], 
+            partitions_sample[i][:,1], 
+            color=colors[i],
+            marker=".",
+            s=2.0
+        )
+    for i in range(centroids.shape[0]):
+        plt.scatter(centroids[i][0], centroids[i][1], color='black', marker='X')
+    
+    plt.show()
 
 if __name__ == '__main__':
     main()
