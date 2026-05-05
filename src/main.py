@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
+from scipy.spatial import distance
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
@@ -17,10 +19,13 @@ eaeklof@kth.se
 2026-05-05
 """
 
+matplotlib.use("Agg")
+
 def main():
     rng = np.random.default_rng(seed=1234)
     scaler = StandardScaler()
     pca = PCA(n_components = 10)
+    k = 2
     
     print("Loading dataset")
     raw_data = pd.read_csv('kidney_sc_dataset.csv')
@@ -36,7 +41,29 @@ def main():
     input_data = data_preprocessed.to_numpy()
 
     print("Running k-means")
-    partitions, centroids = k_means(2, input_data, rng)
+    partitions, centroids = k_means(k, input_data, rng)
+
+    # Scoring
+    global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
+    
+    ## Calinski-Harabasz Index
+    bcss = 0.0
+    wcss = 0.0
+    for i in range(len(partitions)):
+        bcss += (
+            partitions[i].shape[0] 
+            * distance.sqeuclidean(centroids[i], global_centroid)
+        )
+    for i in range(len(partitions)):
+        for j in range(partitions[i].shape[0]):
+            wcss += (
+                distance.sqeuclidean(partitions[i][j], centroids[i])
+            )
+    chi = (bcss / (k - 1)) / (wcss / (input_data.shape[0] - k))
+    
+    ## TODO: Davies-Bouldin Index
+    
+    print("\nCalinski-Harabasz Score: ", chi, "\n")
 
     # Plotting
     colors = ['red', 'orange', 'yellow', 
@@ -61,10 +88,14 @@ def main():
             marker=".",
             s=2.0
         )
+    
     for i in range(centroids.shape[0]):
         plt.scatter(centroids[i][0], centroids[i][1], color='black', marker='X')
     
-    plt.show()
+    plt.scatter(global_centroid[0], global_centroid[1], color='black', marker='*')
+    
+    # plt.show()
+    plt.savefig(f"k-{k}-clustering.png")
 
 if __name__ == '__main__':
     main()
