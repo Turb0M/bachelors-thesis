@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 from k_means_standard import k_means
+from k_meanspp import k_meanspp
 
 """
 Main module for Eynar Eklöf's and Hannes Hultin's Bachelor's thesis project.
@@ -42,6 +43,7 @@ def main():
 
     print("Running k-means")
     partitions, centroids = k_means(k, input_data, rng)
+    #partitions, centroids = k_meanspp(k, input_data, rng)
 
     # Scoring
     global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
