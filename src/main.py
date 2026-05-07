@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -17,16 +18,20 @@ Compares the performance of different K-means algorithm implementations.
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-05
+2026-05-07
 """
 
 matplotlib.use("Agg")
 
-def main():
+def main(variant, k):
+    if k:
+        print(f"\nRunning experiment on variant \"{variant}\" and k={k}\n")
+    else:
+        print(f"\nRunning experiment on variant \"{variant}\"\n")
+
     rng = np.random.default_rng(seed=1234)
     scaler = StandardScaler()
     pca = PCA(n_components = 10)
-    k = 2
     
     print("Loading dataset")
     raw_data = pd.read_csv('kidney_sc_dataset.csv')
@@ -37,13 +42,19 @@ def main():
     pca.fit(data_scaled)
     data_preprocessed = pd.DataFrame(pca.transform(data_scaled))
     
-    print(data_preprocessed.head())
+    # print(data_preprocessed.head()) # debug
 
     input_data = data_preprocessed.to_numpy()
 
     print("Running k-means")
-    partitions, centroids = k_means(k, input_data, rng)
-    #partitions, centroids = k_meanspp(k, input_data, rng)
+
+    if variant == "standard":
+        partitions, centroids = k_means(k, input_data, rng)
+    elif variant == "kpp":
+        partitions, centroids = k_meanspp(k, input_data, rng)
+    else:
+        print("No variant to test provided")
+        return 1
 
     # Scoring
     global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
@@ -97,7 +108,14 @@ def main():
     plt.scatter(global_centroid[0], global_centroid[1], color='black', marker='*')
     
     # plt.show()
-    plt.savefig(f"k-{k}-clustering.png")
+    if k:
+        plt.savefig(f"kmeans-{variant}-k-{k}-clustering.png", dpi=300)
+    else:
+        plt.savefig(f"kmeans-{variant}-clustering.png", dpi=300)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description="Test K-means variants")
+    parser.add_argument("-v", "--variant", help="The K-means variant to be tested")
+    parser.add_argument("-k", help="Number of clusters (if required for variant)")
+    args = parser.parse_args()
+    main(args.variant, int(args.k))
