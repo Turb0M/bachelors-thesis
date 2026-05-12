@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 
 from k_means_standard import k_means
 from k_meanspp import k_meanspp
+from e_k_means import e_k_means
 
 """
 Main module for Eynar Eklöf's and Hannes Hultin's Bachelor's thesis project.
@@ -18,7 +19,7 @@ Compares the performance of different K-means algorithm implementations.
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-07
+2026-05-11
 """
 
 matplotlib.use("Agg")
@@ -52,6 +53,8 @@ def main(variant, k):
         partitions, centroids = k_means(k, input_data, rng)
     elif variant == "kpp":
         partitions, centroids = k_meanspp(k, input_data, rng)
+    elif variant == "enhanced":
+        partitions, centroids = e_k_means(k, input_data, rng)
     else:
         print("No variant to test provided")
         return 1
