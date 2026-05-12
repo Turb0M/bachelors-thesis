@@ -37,11 +37,10 @@ def k_means(k, in_data, rng):
     dimensions = in_data[0].size
     centroids = rng.random((k, dimensions)) - 0.5
     converged = False
-
-    # print(centroids) # debug
+    n_iterations = 0
 
     while not converged:
-        print("\nNot converged.") # testing
+        n_iterations += 1
         converged_centroids = 0
         partitions = [ [] for _ in range(k) ]
         
@@ -67,11 +66,6 @@ def k_means(k, in_data, rng):
                 vector_sum += partitions[i][j]
             
             new_centroid = vector_sum / np.int64(len(partitions[i]))
-            # testing
-            print(
-                f"Sum of squared error to centroid {i}:",
-                distance.euclidean(centroids[i], new_centroid)
-            ) 
             if distance.euclidean(centroids[i], new_centroid) < 1e-3:
                 converged_centroids += 1
 
@@ -79,7 +73,6 @@ def k_means(k, in_data, rng):
         
         if converged_centroids == k:
             converged = True
-            print("\nConverged!")
 
     partitions = [ np.array(partition) for partition in partitions ]
-    return (partitions, centroids)
+    return (partitions, centroids, n_iterations)

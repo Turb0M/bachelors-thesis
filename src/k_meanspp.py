@@ -32,6 +32,7 @@ def k_meanspp(k, in_data, rng):
     dimensions = in_data[0].size
     converged = False
     centroids = np.zeros((k, dimensions))
+    n_iterations = 0
 
     centroids[0] = in_data[rng.integers(in_data.shape[0])]
     distances = []
@@ -45,7 +46,7 @@ def k_meanspp(k, in_data, rng):
     #print(centroids) # debug
 
     while not converged:
-        print("\nNot converged.") # testing
+        n_iterations += 1
         converged_centroids = 0
         partitions = [ [] for _ in range(k) ]
         
@@ -71,11 +72,6 @@ def k_meanspp(k, in_data, rng):
                 vector_sum += partitions[i][j]
             
             new_centroid = vector_sum / np.int64(len(partitions[i]))
-            # testing
-            print(
-                f"Sum of squared error to centroid {i}:",
-                distance.euclidean(centroids[i], new_centroid)
-            )                                                             
             if distance.euclidean(centroids[i], new_centroid) < 1e-3:
                 converged_centroids += 1
 
@@ -83,7 +79,6 @@ def k_meanspp(k, in_data, rng):
 
         if converged_centroids == k:
             converged = True
-            print("\nConverged!")
 
     partitions = [ np.array(partition) for partition in partitions ]
-    return (partitions, centroids)
+    return (partitions, centroids, n_iterations)
