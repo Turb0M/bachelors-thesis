@@ -7,7 +7,7 @@ from run_kmeans_variant import run_kmeans_variant
 """
 main.py
 
-Main module for robust testing of k-means variants for Eynar Eklöf's and
+Main module for testing of k-means variants for Eynar Eklöf's and
 Hannes Hultin's bachelor's thesis project.
 
 eaeklof@kth.se

@@ -18,7 +18,7 @@ eaeklof@kth.se
 2026-05-12
 """
 
-def run_kmeans_variant(variant, k, rng, input_data, plot=False):
+def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
     if variant == "standard":
         partitions, centroids, n_iterations = k_means(k, input_data, rng)
     elif variant == "kpp":
@@ -48,9 +48,12 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False):
     chi = (bcss / (k - 1)) / (wcss / (input_data.shape[0] - k))
     
     ## TODO: Silhouette Score
+    a = 0.0
+    b = 0.0
 
     if plot:
-        plot_results()
+        plot_results(partitions, centroids, 
+                     global_centroid, variant, k, plot_denom)
 
     return {
         "iterations": n_iterations,
@@ -59,26 +62,27 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False):
     }
 
 
-def plot_results(partitions, centroids, global_centroid):
+def plot_results(parts, centroids, global_centroid, variant, k, plot_denom):
     # Plotting
     colors = ['red', 'orange', 'yellow', 
               'green', 'blue', 'purple', 
               'pink', 'brown', 'cyan']
 
-    # Plot 1% of the first two PCA components of each partition
-    partitions_sample = [
+    # Plot a fraction of the first two PCA components of each part
+    rng = np.random.default_rng()
+    parts_sample = [
         rng.choice(
-            partition[:,0:2], 
-            size=partition.shape[0]//100, 
+            part[:,0:2], 
+            size=part.shape[0]//plot_denom, 
             replace=False
         ) 
-        for partition in partitions
+        for part in parts
     ]
     
-    for i in range(len(partitions_sample)):
+    for i in range(len(parts_sample)):
         plt.scatter(
-            partitions_sample[i][:,0], 
-            partitions_sample[i][:,1], 
+            parts_sample[i][:,0], 
+            parts_sample[i][:,1], 
             color=colors[i],
             marker=".",
             s=2.0

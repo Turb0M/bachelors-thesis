@@ -26,7 +26,7 @@ eaeklof@kth.se
 #
 # k: Number of partitions *k*.
 #
-# rng_seed: self explanitory.
+# rng: Random number generator object
 #
 # OUTPUT:
 # 
