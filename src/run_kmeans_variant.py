@@ -10,12 +10,12 @@ from e_k_means import e_k_means
 """
 run_kmeans_variant.py
 
-Pre-processes input data and runs the selected k-means algorithm variant.
+Run a selected k-means algorithm variant and gather cluster validity metrics.
 
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-12
+2026-05-14
 """
 
 def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
@@ -31,8 +31,22 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
 
     # Scoring
     global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
+    chi = ch_score(k, input_data.shape[0], 
+                   partitions, centroids, global_centroid)
+    sil = sil_score(partitions, centroids)
     
-    ## Calinski-Harabasz Index
+    if plot:
+        plot_results(partitions, centroids, 
+                     global_centroid, variant, k, plot_denom)
+
+    return {
+        "iterations": n_iterations,
+        "ch_score": chi,
+        "sil_score": sil
+    }
+
+## Calinski-Harabasz Index
+def ch_score(k, n, partitions, centroids, global_centroid):
     bcss = 0.0
     wcss = 0.0
     for i in range(len(partitions)):
@@ -45,22 +59,40 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
             wcss += (
                 distance.sqeuclidean(partitions[i][j], centroids[i])
             )
-    chi = (bcss / (k - 1)) / (wcss / (input_data.shape[0] - k))
+    chi = (bcss / (k - 1)) / (wcss / (n - k))
+    return chi
+
+# Silhouette Score (full dataset)
+def sil_score(partitions, centroids):
+    score_sum = 0.0
+    points = 0
     
-    ## TODO: Silhouette Score
-    a = 0.0
-    b = 0.0
+    for i in range(len(partitions)):
+        for j in range(partitions[i].shape[0]):
+            other_points = np.delete(partitions[i], j, axis=0)
 
-    if plot:
-        plot_results(partitions, centroids, 
-                     global_centroid, variant, k, plot_denom)
+            a = np.mean(distance.cdist(other_points, 
+                                       np.array([partitions[i][j]]), 
+                                       metric='sqeuclidean'))
 
-    return {
-        "iterations": n_iterations,
-        "ch_score": chi,
-        # "silhouette": sil_score
-    }
+            temp_distance = np.finfo(np.float64).max
+            next_closest_index = -1
+            
+            for centroid in np.delete(centroids, i, axis=0):
+                if (distance.sqeuclidean(centroid, partitions[i][j]) 
+                    < temp_distance):
+                    temp_distane = distance.sqeuclidean(centroid, 
+                                                        partitions[i][j])
+                    next_closest_index += 1
 
+            b = np.mean(distance.cdist(partitions[next_closest_index],
+                                       np.array([partitions[i][j]]),
+                                       metric='sqeuclidean'))
+
+            points += 1
+            score_sum += (b - a) / np.max([b, a])
+
+    return score_sum / points
 
 def plot_results(parts, centroids, global_centroid, variant, k, plot_denom):
     # Plotting
@@ -98,4 +130,3 @@ def plot_results(parts, centroids, global_centroid, variant, k, plot_denom):
     else:
         plt.savefig(f"kmeans-{variant}-clustering.png", dpi=300)
 
-   

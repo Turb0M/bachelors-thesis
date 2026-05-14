@@ -11,7 +11,7 @@ Main module for testing of k-means variants for Eynar Eklöf's and
 Hannes Hultin's bachelor's thesis project.
 
 eaeklof@kth.se
-2026-05-12
+2026-05-14
 """
 
 # NOTE: Mostly Copilot generated
@@ -47,7 +47,7 @@ def summarize(results):
         "iterations_mean": np.mean([r["iterations"] for r in results]),
         "time_mean": np.mean([r["time"] for r in results]),
         "ch_mean": np.mean([r["ch_score"] for r in results]),
-        # "silhouette_mean": np.mean([r["silhouette"] for r in results]),
+        "silhouette_mean": np.mean([r["sil_score"] for r in results]),
 
         # Optional: variability
         # "time_std": np.std([r["time"] for r in results]),
