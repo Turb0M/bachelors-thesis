@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
+from sklearn.metrics import silhouette_score
 
 from k_means_standard import k_means
 from k_meanspp import k_meanspp
@@ -15,7 +16,7 @@ Run a selected k-means algorithm variant and gather cluster validity metrics.
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-14
+2026-05-17
 """
 
 def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
@@ -28,22 +29,12 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
     else:
         print("No variant to test provided")
         return 1
-
-    # Scoring
-    global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
-    chi = ch_score(k, input_data.shape[0], 
-                   partitions, centroids, global_centroid)
-    sil = sil_score(partitions, centroids)
     
     if plot:
         plot_results(partitions, centroids, 
                      global_centroid, variant, k, plot_denom)
 
-    return {
-        "iterations": n_iterations,
-        "ch_score": chi,
-        "sil_score": sil
-    }
+    return partitions, centroids, n_iterations
 
 ## Calinski-Harabasz Index
 def ch_score(k, n, partitions, centroids, global_centroid):
@@ -62,37 +53,69 @@ def ch_score(k, n, partitions, centroids, global_centroid):
     chi = (bcss / (k - 1)) / (wcss / (n - k))
     return chi
 
+# Silhouette Score
+# Just wrapping scikitlearn's implementation, so implementation details are
+# uncertain.
+def sil_score(partitions):
+    # Switching to the format SciPy uses
+    # Below function is AI-generated
+    def flatten_partitions(partitions):
+        partitions_vstack = np.vstack(partitions)
+        labels = np.concatenate([
+            np.full(len(cluster), i)
+            for i, cluster in enumerate(partitions)
+        ])
+        return partitions_vstack, labels
+
+    partitions_vstack, labels = flatten_partitions(partitions)
+    return silhouette_score(partitions_vstack, labels)
+
 # Silhouette Score (full dataset)
-def sil_score(partitions, centroids):
-    score_sum = 0.0
-    points = 0
+# This implementation is unfortunately too slow.
+# I'll have to use what Copilot suggested.
+#def sil_score(partitions, centroids):
+#    score_sum = 0.0
+#    points = 0
+#    
+#    for i in range(len(partitions)):
+#        for j in range(partitions[i].shape[0]):
+#            other_points = np.delete(partitions[i], j, axis=0)
+#
+#            a = np.mean(distance.cdist(other_points, 
+#                                       np.array([partitions[i][j]]), 
+#                                       metric='sqeuclidean'))
+#
+#            temp_distance = np.finfo(np.float64).max
+#            next_closest_index = -1
+#            
+#            for centroid in np.delete(centroids, i, axis=0):
+#                if (distance.sqeuclidean(centroid, partitions[i][j]) 
+#                    < temp_distance):
+#                    temp_distane = distance.sqeuclidean(centroid, 
+#                                                        partitions[i][j])
+#                    next_closest_index += 1
+#
+#            b = np.mean(distance.cdist(partitions[next_closest_index],
+#                                       np.array([partitions[i][j]]),
+#                                       metric='sqeuclidean'))
+#
+#            points += 1
+#            score_sum += (b - a) / np.max([b, a])
+#
+#    return score_sum / points
+
+def score(k, input_data, partitions, centroids, n_iterations):
+    # Scoring
+    global_centroid = np.sum(input_data, axis=0) / input_data.shape[0]
+    chi = ch_score(k, input_data.shape[0], 
+                   partitions, centroids, global_centroid)
+    sil = sil_score(partitions)
     
-    for i in range(len(partitions)):
-        for j in range(partitions[i].shape[0]):
-            other_points = np.delete(partitions[i], j, axis=0)
-
-            a = np.mean(distance.cdist(other_points, 
-                                       np.array([partitions[i][j]]), 
-                                       metric='sqeuclidean'))
-
-            temp_distance = np.finfo(np.float64).max
-            next_closest_index = -1
-            
-            for centroid in np.delete(centroids, i, axis=0):
-                if (distance.sqeuclidean(centroid, partitions[i][j]) 
-                    < temp_distance):
-                    temp_distane = distance.sqeuclidean(centroid, 
-                                                        partitions[i][j])
-                    next_closest_index += 1
-
-            b = np.mean(distance.cdist(partitions[next_closest_index],
-                                       np.array([partitions[i][j]]),
-                                       metric='sqeuclidean'))
-
-            points += 1
-            score_sum += (b - a) / np.max([b, a])
-
-    return score_sum / points
+    return {
+        "iterations": n_iterations,
+        "ch_score": chi,
+        "sil_score": sil
+    }
 
 def plot_results(parts, centroids, global_centroid, variant, k, plot_denom):
     # Plotting

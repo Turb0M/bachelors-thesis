@@ -3,6 +3,7 @@ import argparse
 import time
 import preprocessing
 from run_kmeans_variant import run_kmeans_variant
+from run_kmeans_variant import score
 
 """
 main.py
@@ -28,17 +29,19 @@ def benchmark(variant, k, n_runs, data_file='kidney_sc_dataset.csv'):
               f" with n={n_runs}\n")
 
     for i in range(n_runs):
-        print(f"Run {i+1}:", end=' ')
+        print(f"Run {i+1}:")
         
         start = time.perf_counter()
-        res = run_kmeans_variant(variant, k, rng, input_data)
+        partitions, centroids, n_iterations = (
+            run_kmeans_variant(variant, k, rng, input_data)
+        )
         elapsed = time.perf_counter() - start
+        print("Converged! Scoring...")
         
+        res = score(k, input_data, partitions, centroids, n_iterations)
+        print("Finished!\n")
         res["time"] = elapsed
         results.append(res)
-
-        print("Converged!")
-        
     return results
 
 # NOTE: Copilot generated

@@ -17,7 +17,7 @@ def prepare(data_file: str):
     raw_data = pd.read_csv(data_file)
     print("Pre-processing dataset")
     
-    data_trimmed = raw_data.select_dtypes(include=['number'])
+    data_trimmed = raw_data.select_dtypes(include=['int64'])
     scaler = StandardScaler()
     data_scaled = pd.DataFrame(scaler.fit_transform(data_trimmed))
     
