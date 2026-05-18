@@ -68,7 +68,9 @@ def sil_score(partitions):
         return partitions_vstack, labels
 
     partitions_vstack, labels = flatten_partitions(partitions)
-    return silhouette_score(partitions_vstack, labels)
+    return silhouette_score(partitions_vstack, labels, 
+                            metric='sqeuclidean',
+                            sample_size = len(partitions_vstack)//5)
 
 # Silhouette Score (full dataset)
 # This implementation is unfortunately too slow.

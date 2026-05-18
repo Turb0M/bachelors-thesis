@@ -33,8 +33,8 @@ def e_k_means(k, in_data, rng):
     dimensions = in_data[0].size
     centroids = rng.random((k, dimensions)) - 0.5
     converged = False
-    point_distances = np.full(in_data.shape[0], np.finfo(np.float64).max)
-    cluster_ids = np.zeros(in_data.shape[0], dtype=int)
+    point_distances = [ np.inf for _ in range(in_data.shape[0]) ]
+    cluster_ids = [ 0 for _ in range(in_data.shape[0]) ]
     n_iterations = 0
 
     while not converged:
