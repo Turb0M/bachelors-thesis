@@ -16,7 +16,7 @@ advances in the era of big data
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-04-27
+2026-05-21
 """
 
 # INPUT: 
@@ -65,7 +65,11 @@ def k_means(k, in_data, rng):
             for j in range(len(partitions[i])):
                 vector_sum += partitions[i][j]
             
-            new_centroid = vector_sum / np.int64(len(partitions[i]))
+            if len(partitions[i]) == 0:
+                new_centroid = rng.random(dimensions) - 0.5
+            else:
+                new_centroid = vector_sum / np.int64(len(partitions[i]))
+            
             if distance.euclidean(centroids[i], new_centroid) < 1e-3:
                 converged_centroids += 1
 

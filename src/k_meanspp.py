@@ -71,7 +71,11 @@ def k_meanspp(k, in_data, rng):
             for j in range(len(partitions[i])):
                 vector_sum += partitions[i][j]
             
-            new_centroid = vector_sum / np.int64(len(partitions[i]))
+            if len(partitions[i]) == 0:
+                new_centroid = in_data[rng.integers(len(in_data))]
+            else:
+                new_centroid = vector_sum / np.int64(len(partitions[i]))
+            
             if distance.euclidean(centroids[i], new_centroid) < 1e-3:
                 converged_centroids += 1
 
