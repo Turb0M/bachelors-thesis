@@ -16,13 +16,12 @@ advances in the era of big data
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-21
+2026-05-26
 """
 
 # INPUT: 
 # 
 # in_data: Array of N-d datapoints, i.e. a list of numpy arrays. Should be normalized!
-# Update: Using a Pandas DataFrame for this instead
 #
 # k: Number of partitions *k*.
 #
@@ -38,45 +37,48 @@ def k_means(k, in_data, rng):
     centroids = rng.random((k, dimensions)) - 0.5
     converged = False
     n_iterations = 0
+    cluster_assignments = np.zeros(in_data.shape[0], dtype='int64')
+    converge_threshold = 1e-3
 
     while not converged:
         n_iterations += 1
         converged_centroids = 0
-        partitions = [ [] for _ in range(k) ]
         
         # Step 1: Assign points to nearest centroids
         for i in range(in_data.shape[0]): # for each datapoint in the input data
                 
             # Initialize the calculation by doing the first iteration outside the loop
             distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[0])
-            assigned_cluster_index = 0
+            cluster_assignments[i] = 0
             
             for j in range(1, k):
                 new_distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[j])
                 if (new_distance_to_centroid < distance_to_centroid):
                     distance_to_centroid = new_distance_to_centroid
-                    assigned_cluster_index = j
-                
-            partitions[assigned_cluster_index].append(in_data[i])
-
+                    cluster_assignments[i] = j
+ 
         # Step 2: recompute the centroids
-        for i in range(k):
-            vector_sum = np.zeros(dimensions)
-            for j in range(len(partitions[i])):
-                vector_sum += partitions[i][j]
-            
-            if len(partitions[i]) == 0:
-                new_centroid = rng.random(dimensions) - 0.5
-            else:
-                new_centroid = vector_sum / np.int64(len(partitions[i]))
-            
-            if distance.euclidean(centroids[i], new_centroid) < 1e-3:
-                converged_centroids += 1
+        vector_sums = np.zeros((k, dimensions))
+        assignment_counts = np.zeros(k)
+        for (assignment, data_point) in zip(cluster_assignments, in_data):
+            vector_sums[assignment] += data_point
+            assignment_counts[assignment] += 1
 
-            centroids[i] = new_centroid
+        new_centroids = (
+                np.where(vector_sums == np.zeros(dimensions), 
+                         rng.random(dimensions) - 0.5, 
+                         vector_sums) 
+                / 
+                np.where(assignment_counts[:, None] == 0,
+                         [1],
+                         assignment_counts[:, None])
+        )
+
+        deltas = np.array(list(map(distance.euclidean, centroids, new_centroids)))
         
-        if converged_centroids == k:
+        if np.sum(deltas < converge_threshold) == k:
             converged = True
 
-    partitions = [ np.array(partition) for partition in partitions ]
-    return (partitions, centroids, n_iterations)
+        centroids = new_centroids
+
+    return (cluster_assignments, centroids, n_iterations)

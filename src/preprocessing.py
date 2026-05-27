@@ -16,8 +16,9 @@ def prepare(data_file: str):
     print(f"Loading dataset {data_file}")
     raw_data = pd.read_csv(data_file)
     print("Pre-processing dataset")
-    
-    data_trimmed = raw_data.select_dtypes(include=['int64'])
+
+    dtypes = 'int64' if data_file == 'kidney_sc_dataset.csv' else 'float64'
+    data_trimmed = raw_data.select_dtypes(include=[dtypes])
     scaler = StandardScaler()
     data_scaled = pd.DataFrame(scaler.fit_transform(data_trimmed))
     
