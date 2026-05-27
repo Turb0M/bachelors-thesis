@@ -12,7 +12,7 @@ https://www.geeksforgeeks.org/machine-learning/ml-k-means-algorithm/
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-06
+2026-05-27
 """
 
 # INPUT: 
@@ -21,68 +21,76 @@ eaeklof@kth.se
 #
 # k: Number of partitions *k*.
 #
-# rng_seed: self explanitory.
+# rng: Random number generator object.
 #
 # OUTPUT:
 # 
-# clusters: Partition of the datapoints in `in_data`. i.e. a 2-d list of numpy arrays.
-# centroids: Centerpoint of each partition in `clusters`.
+# cluster_assignments: Membership array modeling the partitioning of input data
+# into clusters.
+# centroids: Centerpoint (mean vector) of each cluster.
+# nr_iterations: Number of iterations before convergence
 
 def k_meanspp(k, in_data, rng):
     dimensions = in_data[0].size
     converged = False
     centroids = np.zeros((k, dimensions))
     n_iterations = 0
+    cluster_assignments = np.zeros(in_data.shape[0], dtype='int64')
+    converge_threshold = 1e-3
 
     centroids[0] = in_data[rng.integers(in_data.shape[0])]
-    distances = []
-    for datapoint in in_data:
-        distances.append(distance.sqeuclidean(centroids[0], datapoint))
-    probabilities = np.array(distances) / np.sum(distances)
+    
+    #distances = []
+    #for datapoint in in_data:
+    #    distances.append(distance.sqeuclidean(centroids[0], datapoint))
+    distances = distance.cdist(in_data, [centroids[0]], metric='sqeuclidean')
+
+    probabilities = np.ndarray.flatten(distances) / np.sum(distances)
     choices = rng.choice(in_data, size=k-1, p=probabilities)
     for i in range(1, k):
         centroids[i] = choices[i-1]
-
-    #print(centroids) # debug
+    
+    # Free memory (unsure if this is actually necessary)
+    distances = None
 
     while not converged:
         n_iterations += 1
         converged_centroids = 0
-        partitions = [ [] for _ in range(k) ]
         
         # Step 1: Assign points to nearest centroids
         for i in range(in_data.shape[0]): # for each datapoint in the input data
                 
             # Initialize the calculation by doing the first iteration outside the loop
             distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[0])
-            assigned_cluster_index = 0
             
             for j in range(1, k):
                 new_distance_to_centroid = distance.sqeuclidean(in_data[i], centroids[j])
                 if (new_distance_to_centroid < distance_to_centroid):
                     distance_to_centroid = new_distance_to_centroid
-                    assigned_cluster_index = j
-                
-            partitions[assigned_cluster_index].append(in_data[i])
+                    cluster_assignments[i] = j
 
         # Step 2: recompute the centroids
-        for i in range(k):
-            vector_sum = np.zeros(dimensions)
-            for j in range(len(partitions[i])):
-                vector_sum += partitions[i][j]
-            
-            if len(partitions[i]) == 0:
-                new_centroid = in_data[rng.integers(len(in_data))]
-            else:
-                new_centroid = vector_sum / np.int64(len(partitions[i]))
-            
-            if distance.euclidean(centroids[i], new_centroid) < 1e-3:
-                converged_centroids += 1
+        vector_sums = np.zeros((k, dimensions))
+        assignment_counts = np.zeros(k)
+        for (assignment, data_point) in zip(cluster_assignments, in_data):
+            vector_sums[assignment] += data_point
+            assignment_counts[assignment] += 1
 
-            centroids[i] = new_centroid
+        new_centroids = ( 
+                np.where(vector_sums == np.zeros(dimensions), 
+                         in_data[rng.integers(in_data.shape[0])], 
+                         vector_sums) 
+                /   
+                np.where(assignment_counts[:, None] == 0,
+                         [1],
+                         assignment_counts[:, None])
+        )   
 
-        if converged_centroids == k:
+        deltas = np.array(list(map(distance.euclidean, centroids, new_centroids)))
+    
+        if np.sum(deltas < converge_threshold) == k:
             converged = True
 
-    partitions = [ np.array(partition) for partition in partitions ]
-    return (partitions, centroids, n_iterations)
+        centroids = new_centroids
+       
+    return (cluster_assignments, centroids, n_iterations)
