@@ -39,17 +39,21 @@ def k_meanspp(k, in_data, rng):
     converge_threshold = 1e-3
 
     centroids[0] = in_data[rng.integers(in_data.shape[0])]
-    
-    #distances = []
-    #for datapoint in in_data:
-    #    distances.append(distance.sqeuclidean(centroids[0], datapoint))
     distances = distance.cdist(in_data, [centroids[0]], metric='sqeuclidean')
-
     probabilities = np.ndarray.flatten(distances) / np.sum(distances)
-    choices = rng.choice(in_data, size=k-1, p=probabilities)
-    for i in range(1, k):
-        centroids[i] = choices[i-1]
+    next_centroid = rng.choice(in_data, p=probabilities)
+    centroids[1] = next_centroid
     
+    for i in range(2, k):
+        for j in range(i):
+            distances = np.minimum(
+                distances,
+                distance.cdist(in_data, [centroids[j]], metric='sqeuclidean')
+            )
+        probabilities = np.ndarray.flatten(distances) / np.sum(distances)
+        next_centroid = rng.choice(in_data, p=probabilities)
+        centroids[i] = next_centroid
+
     # Free memory (unsure if this is actually necessary)
     distances = None
 
