@@ -9,10 +9,10 @@ Module for the k-means pre-processing pipeline used in Eynar Eklöf's and
 Hannes Hultin's bachelor's thesis project.
 
 eaeklof@kth.se
-2026-05-12
+2026-05-27
 """
 
-def prepare(data_file: str):
+def prepare(data_file, rng, denominator=1):
     print(f"Loading dataset {data_file}")
     raw_data = pd.read_csv(data_file)
     print("Pre-processing dataset")
@@ -30,4 +30,9 @@ def prepare(data_file: str):
     else:
         data_preprocessed = data_scaled.to_numpy()
 
-    return data_preprocessed
+    if denominator == 1:
+        return data_preprocessed
+    else:
+        return rng.choice(data_preprocessed,
+                         size=data_preprocessed.shape[0]//denominator,
+                         replace=False)

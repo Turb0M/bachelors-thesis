@@ -1,7 +1,7 @@
 import numpy as np
 import argparse
 import time
-import preprocessing
+from preprocessing import prepare
 from run_kmeans_variant import run_kmeans_variant
 from run_kmeans_variant import score
 
@@ -12,13 +12,13 @@ Main module for testing of k-means variants for Eynar Eklöf's and
 Hannes Hultin's bachelor's thesis project.
 
 eaeklof@kth.se
-2026-05-26
+2026-05-27
 """
 
 # NOTE: Mostly Copilot generated
-def benchmark(variant, k, n_runs, data_file='kidney_sc_dataset.csv'):
-    input_data = preprocessing.prepare(data_file)
+def benchmark(variant, k, n_runs, denom, data_file='kidney_sc_dataset.csv'):
     rng = np.random.default_rng(seed=1234)
+    input_data = prepare(data_file, rng, denominator=denom)
     results = []
 
     if k:
@@ -57,18 +57,18 @@ def summarize(results):
     }
 
 # NOTE: Mostly Copilot generated
-def main(k, n_runs, data_file, variant):
+def main(k, n_runs, denom, data_file, variant):
     variants = ["standard", "kpp", "enhanced"]
     
     if variant in variants:
-        results = benchmark(variant, k, n_runs, data_file)
+        results = benchmark(variant, k, n_runs, denom, data_file)
         summary = summarize(results)
         print(f"\nVariant: {variant}")
         for key, value in summary.items():
             print(f"{key}: {value}")
     else:
         for variant in variants:
-            results = benchmark(variant, k, n_runs, data_file)
+            results = benchmark(variant, k, n_runs, denom, data_file)
             summary = summarize(results)
 
             print(f"\nVariant: {variant}")
@@ -84,7 +84,11 @@ if __name__ == '__main__':
                         help="Variant to run benchmark on. Leave blank to test all.")
     parser.add_argument("-n", "--nr-iterations", default=20,
                         help="Number of experiment iterations to use for mean value")
+    parser.add_argument("-d", "--denominator", default=1,
+                        help="""Number to be used as the denominator for sampling
+                              input data. To be used on large input files.""")
     args = parser.parse_args()
-    main(int(args.k), int(args.nr_iterations), args.filename, args.variant)
+    main(int(args.k), int(args.nr_iterations), int(args.denominator), 
+         args.filename, args.variant)
 
 
