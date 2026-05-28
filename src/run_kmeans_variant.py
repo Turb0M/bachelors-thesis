@@ -8,6 +8,7 @@ from sklearn.metrics import calinski_harabasz_score
 from k_means_standard import k_means
 from k_meanspp import k_meanspp
 from e_k_means import e_k_means
+from k_star_means import k_star_means
 
 """
 run_kmeans_variant.py
@@ -17,7 +18,7 @@ Run a selected k-means algorithm variant and gather cluster validity metrics.
 Eynar Ason Eklöf
 eaeklof@kth.se
 
-2026-05-27
+2026-05-28
 """
 
 def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
@@ -27,6 +28,8 @@ def run_kmeans_variant(variant, k, rng, input_data, plot=False, plot_denom=100):
         assignments, centroids, n_iterations = k_meanspp(k, input_data, rng)
     elif variant == "enhanced":
         assignments, centroids, n_iterations = e_k_means(k, input_data, rng)
+    elif variant == "star":
+        assignments, centroids, n_iterations = k_star_means(k, input_data, rng)
     else:
         print("No variant to test provided")
         return 1
