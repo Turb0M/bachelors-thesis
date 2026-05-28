@@ -12,7 +12,7 @@ Main module for testing of k-means variants for Eynar Eklöf's and
 Hannes Hultin's bachelor's thesis project.
 
 eaeklof@kth.se
-2026-05-27
+2026-05-28
 """
 
 # NOTE: Mostly Copilot generated
@@ -29,17 +29,23 @@ def benchmark(variant, k, n_runs, denom, data_file='kidney_sc_dataset.csv'):
               f" with n={n_runs}\n")
 
     for i in range(n_runs):
-        print(f"Run {i+1}:")
+        if i % 100 == 0:
+            print(f"Run {i+1}:")
         
         start = time.perf_counter()
         assignmnets, centroids, n_iterations = (
             run_kmeans_variant(variant, k, rng, input_data)
         )
         elapsed = time.perf_counter() - start
-        print("Converged! Scoring...")
+        
+        if i % 100 == 0:
+            print("Converged! Scoring...")
         
         res = score(input_data, assignmnets, n_iterations)
-        print("Finished!\n")
+        
+        if i % 100 == 0:
+            print("Finished!\n")
+        
         res["time"] = elapsed
         results.append(res)
     return results
